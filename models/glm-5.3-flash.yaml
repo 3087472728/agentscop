@@ -1,0 +1,23 @@
+name: glm-5.3-flash
+label: GLM-5.3 Flash
+status: active
+
+# 智谱 Coding Plan 套餐内模型。字段结构对齐官方
+# model/_openai_chat/_models/*.yaml；上下文/输出上限为占位值，
+# 按官方规格确认后可调整。
+input_types:
+  - text/plain
+
+output_types:
+  - text/plain
+
+context_size: 128000
+output_size: 16384
+
+parameter_overrides:
+  thinking_enable:
+    hidden: true
+  reasoning_effort:
+    hidden: true
+  voice:
+    hidden: true

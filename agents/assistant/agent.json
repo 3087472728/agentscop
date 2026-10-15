@@ -1,0 +1,7 @@
+{
+  "name": "助手",
+  "system_prompt_file": "system_prompt.md",
+  "context_config": {},
+  "react_config": {},
+  "invite_config": {}
+}

@@ -1,0 +1,7 @@
+{
+  "name": "生成ppt",
+  "system_prompt_file": "system_prompt.md",
+  "context_config": {},
+  "react_config": {},
+  "invite_config": {}
+}

@@ -1,0 +1,21 @@
+{
+  "_c": "送达回证家族模板(已完成40份同构文书的通用spec)。复制本文件→改 template_id/backup_tag/case_no占位文字→ python _bindrun.py run 该文件 --dry → 无警告再去掉 --dry 正式跑。印章区/备注若该文书模板有,在 steps 里补 stamp_date/remark_textarea 区块。",
+  "doc_name": "送达回证-XXX(家族模板)",
+  "template_id": "__TID__",
+  "backup_tag": "sdhzXXX",
+  "auth": "cache",
+  "refresh_meta": true,
+  "asserts": ["案号：", "案由：", "受送达人", "送达方式"],
+  "steps": [
+    { "op": "block", "name": "case_no", "args": { "placeholder": "辽X交X送字〔〕号" } },
+    { "op": "block", "name": "delivery_receipt", "args": {} },
+    { "op": "block", "name": "remark_textarea", "args": { "anchor": "备注：", "tr": 12, "col": 1 } },
+    { "op": "block", "name": "stamp_date", "args": { "agency": "交通运输执法部门（印章）", "tr": 11, "col": 1 } }
+  ],
+  "split_checkboxes": true,
+  "clean_date_residual": true,
+  "verify": {
+    "expect_min_bindings": 6,
+    "expect_bind": ["docNo", "violationCaseCause", "agency", "personName", "companyName", "systemDate"]
+  }
+}

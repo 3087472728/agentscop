@@ -1,0 +1,107 @@
+# agentscop-platform server deployment — Aliyun ACR edition.
+#
+# Parallel install on 192.168.100.100 next to (all untouched):
+#   - agentscope-v2 compose stack :8005  (containers agentscope2-*)
+#   - old pre-research systemd service   (agentrunner:agentscope-api, :8020)
+#
+# Isolation = new compose project name "agentscop-platform": all
+# containers / networks / volumes get their own prefix. Ports moved to
+# the 6000-range to stay clear of the company stack (8005/6380/6334/19557):
+#   backend 6020  (HTTPS, the ONLY public port — API + WebUI same origin)
+#   redis   6381 / qdrant 6335 / tei 19558  (host loopback debugging only)
+#
+# Server layout (see .env.server.example / DEPLOY-ALIYUN.md):
+#   .env               (from .env.server.example; also mounted into backend)
+#   certs/             (self-signed TLS material, see DEPLOY-ALIYUN.md)
+#   workspaces/ blobs/ logs/   (mkdir -p beforehand)
+#   docker-compose pull && docker-compose up -d
+#
+# NOTE(seccomp): the server runs docker 20.10.x on kernel 5.4 — its
+# seccomp profile rejects clone3 used by redis 7.4 / qdrant / TEI
+# ("OS can't spawn worker thread: Operation not permitted"), so all
+# services run with seccomp=unconfined (trusted intranet trade-off).
+
+name: agentscop-platform
+
+services:
+  backend:
+    image: ${AGENTS_IMAGE:?set AGENTS_IMAGE in .env}
+    env_file: .env
+    security_opt: ["seccomp=unconfined"]
+    ports:
+      - "${AGENTS_BACKEND_PORT:-6020}:${AGENTS_BACKEND_PORT:-6020}"
+    volumes:
+      # .env mount: scripts (register_agents etc.) and server/auth.py
+      # read /app/.env from inside the container
+      - ./.env:/app/.env:ro
+      # TLS material for AGENTS_SSL_CERTFILE / AGENTS_SSL_KEYFILE
+      - ./certs:/app/certs:ro
+      # runtime data, persisted on the host
+      - ./workspaces:/app/workspaces
+      - ./blobs:/app/blobs
+      - ./logs:/app/logs
+      # playwright browsers downloaded by the browser-use MCP survive
+      # container recreation
+      - ms_playwright_cache:/root/.cache/ms-playwright
+    depends_on:
+      - redis
+      - qdrant
+      - tei
+    healthcheck:
+      # any accept = alive (endpoints 401 without auth)
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import socket; socket.create_connection(('localhost', ${AGENTS_BACKEND_PORT:-6020}), 3)\"",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  redis:
+    image: ${AGENTS_IMAGE_REDIS:?set AGENTS_IMAGE_REDIS in .env}
+    security_opt: ["seccomp=unconfined"]
+    # roles table source of truth lives here (roles:* keys) — AOF on,
+    # everysec (max 1s loss). App self-checks and fails closed otherwise.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6381:6379" # host-side debugging only
+    restart: unless-stopped
+
+  qdrant:
+    image: ${AGENTS_IMAGE_QDRANT:?set AGENTS_IMAGE_QDRANT in .env}
+    security_opt: ["seccomp=unconfined"]
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "127.0.0.1:6335:6333" # host-side debugging only
+    restart: unless-stopped
+
+  tei:
+    image: ${AGENTS_IMAGE_TEI:?set AGENTS_IMAGE_TEI in .env}
+    security_opt: ["seccomp=unconfined"]
+    # cpu-1.8 listens on 80 inside the container; the model dir must hold
+    # flattened HF files (config.json / model.safetensors / ...). If the
+    # host keeps the HF-cache layout, point AGENTS_TEI_WEIGHTS_HOST_DIR at
+    # the parent dir and AGENTS_TEI_MODEL_ID at /data/<org>--<name>.
+    command: ["--model-id", "${AGENTS_TEI_MODEL_ID:-/data/BAAI--bge-small-zh-v1.5}"]
+    volumes:
+      - ${AGENTS_TEI_WEIGHTS_HOST_DIR:-/home/agentrunner/models}:/data:ro
+    ports:
+      - "127.0.0.1:19558:80" # host-side debugging only
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:80/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  qdrant_data:
+  ms_playwright_cache:

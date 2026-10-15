@@ -1,0 +1,13 @@
+packages:
+    - frontend
+    - backend
+
+# pnpm v10 blocks postinstall scripts by default; these two ship native
+# binaries and need their build scripts to work.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+
+onlyBuiltDependencies:
+    - sharp
+    - unrs-resolver

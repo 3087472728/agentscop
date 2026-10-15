@@ -1,0 +1,101 @@
+name: agentscop-platform
+
+# 生产形态栈：redis(存储+角色表) + qdrant(向量库) + tei(BGE embedding)
+# + server(单端口 API+WebUI) + web(前端开发服务器，可选)。
+# 本地零依赖模式（sqlite + 本地向量库 + file 角色表）不需要 compose，
+# 直接 python main.py。
+services:
+  redis:
+    image: redis:7-alpine
+    # 用户表事实源在本实例（roles:* 键族）——AOF 必开：appendonly yes +
+    # appendfsync everysec（最多丢 1s 写入）。若被人为关闭，应用启动自检
+    # 会打 WARNING 横幅并拒绝全部用户写操作（fail closed）；另有每日
+    # JSON 冷备兜底（config/role_backups/，由 backup_apps.sh 生成）。
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+    volumes:
+      - redis-data:/data
+    # 仅本机可连（Redis 未设密码，不暴露局域网）。GUI 工具
+    # （Another Redis Desktop Manager / RedisInsight）连 127.0.0.1:6379。
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 12
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "127.0.0.1:6333:6333"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':<((echo > /dev/tcp/127.0.0.1/6333))' "]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  tei:
+    # BGE embedding 服务（OpenAI 兼容 /v1/embeddings）。
+    # 权重已随仓库分发（models/bge/BAAI--bge-small-zh-v1.5/）。
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-latest
+    command: ["--model-id", "/data"]
+    volumes:
+      - ./models/bge/BAAI--bge-small-zh-v1.5:/data
+    ports:
+      - "127.0.0.1:19556:80"
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  server:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      REDIS_HOST: redis
+      AGENTS_STORAGE: redis
+      AGENTS_ROLES_STORE: redis
+      AGENTS_QDRANT_MODE: url
+      AGENTS_QDRANT_URL: http://qdrant:6333
+      TEI_BASE_URL: http://tei:80/v1
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+
+  web:
+    build: ./web_ui
+    environment:
+      VITE_USE_POLLING: "1"
+    volumes:
+      - ./web_ui:/app
+      - web-node-modules:/app/node_modules
+      - web-frontend-node-modules:/app/frontend/node_modules
+      - web-backend-node-modules:/app/backend/node_modules
+      - web-pnpm-store:/root/.local/share/pnpm/store
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+
+volumes:
+  redis-data:
+  qdrant-data:
+  web-node-modules:
+  web-frontend-node-modules:
+  web-backend-node-modules:
+  web-pnpm-store:

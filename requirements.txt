@@ -1,0 +1,28 @@
+# agentscop-platform 后端依赖（Python >= 3.11，推荐 3.12/3.13）
+#
+# 官方框架基座 agentscope[...]==2.0.10 不在本文件内（避免镜像构建时
+# 试图安装宿主机相对路径）：
+# - 本地开发：editable 安装 agentscope-official 源码（见 README）：
+#     pip install -e ../agentscope-official[service,storage-redis,storage-sql,channel,vdb-qdrant,rag]
+# - 镜像构建：Dockerfile 直接从 PyPI 安装 agentscope==2.0.10（同版）。
+
+# SQLite 异步驱动（官方 storage-sql extra 只含 SQLAlchemy/Alembic）
+aiosqlite>=0.20
+
+# PDF 视觉转写解析器（server/pdf_figures_parser.py：位图渲染 + 视觉模型）
+pymupdf>=1.26
+pillow>=11.0
+
+# Dev 前端代理的 HMR WebSocket（AGENTS_DEV_FRONTEND_URL 模式）
+websockets>=13
+
+# 候选词动态占位符的 SQL 数据源（config/dynamic_sources.json 配置了
+# db_file 时才需要；未配置保持注释）
+# psycopg2-binary>=2.9
+
+# 可选：本地 embedding 服务（embed_server.py，sentence-transformers BGE。
+# 不装也能启动 —— 仅知识库索引需要 embedding，可改指 TEI 容器）
+# sentence-transformers>=3.0
+
+# 开发/调试（backend-watchdog.ps1 / IDE attach 使用）
+# debugpy>=1.8

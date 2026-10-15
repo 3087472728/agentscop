@@ -1,0 +1,7 @@
+{
+  "name": "海河天津站",
+  "system_prompt_file": "system_prompt.md",
+  "context_config": {},
+  "react_config": {},
+  "invite_config": {}
+}

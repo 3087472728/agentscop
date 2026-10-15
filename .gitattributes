@@ -1,0 +1,6 @@
+# Git LFS：知识库 embedding 模型权重（models/bge/ 下的二进制大文件）
+models/bge/**/*.safetensors filter=lfs diff=lfs merge=lfs -text
+models/bge/**/*.bin filter=lfs diff=lfs merge=lfs -text
+models/bge/**/*.onnx filter=lfs diff=lfs merge=lfs -text
+models/bge/**/*.h5 filter=lfs diff=lfs merge=lfs -text
+models/bge/**/*.msgpack filter=lfs diff=lfs merge=lfs -text

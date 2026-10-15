@@ -1,0 +1,33 @@
+# Build context exclusions for deploy/Dockerfile (BuildKit reads this
+# file because it is named <Dockerfile-basename>.dockerignore). Paths
+# are relative to the build context root (agentscop-platform/).
+
+# --- secrets: never bake credentials into the image ---
+.env
+**/*.local
+
+# --- runtime data (mounted as volumes on the server instead) ---
+workspaces/
+blobs/
+logs/
+
+# --- Git LFS model weights: TEI mounts them from the host ---
+models/bge/BAAI--bge-small-zh-v1.5/
+
+# --- local junk: node_modules, stale builds, caches ---
+web_ui/node_modules/
+web_ui/*/node_modules/
+web_ui/frontend/dist/
+**/__pycache__/
+**/*.pyc
+.venv/
+
+# --- host-only tooling ---
+.git/
+.github/
+deploy/
+docs/
+start-all.ps1
+start-dev.ps1
+stop-all.ps1
+backend-watchdog.ps1

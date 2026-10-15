@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 密钥与本地环境
+.env
+config/download_secret.key
+# 用户表事实源（file 模式运行时数据，含密码哈希；不随仓库分发。
+# 首次启动自动生成 admin 种子，或用 AGENTS_USERS 注入，schema 见
+# config/roles.json.example）
+config/roles.json
+config/roles.snapshot.json
+config/roles.json.imported-*
+config/role_backups/
+config/roles_audit.log
+
+# 运行时数据（数据库/blobs/本地向量库）
+data/
+workspaces/
+blobs/
+logs/
+*.pid
+*.log
+
+# 前端
+web_ui/**/node_modules/
+web_ui/**/dist/
+
+# AI 调试辅助脚本与日志
+tmp/
+compose-up.log

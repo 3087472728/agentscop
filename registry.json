@@ -1,0 +1,38 @@
+{
+  "周报助手": {
+    "agent_id": "29d18e3259254a19a295fe16f6348b5c",
+    "action": "updated"
+  },
+  "数据质检员": {
+    "agent_id": "08fa7af8b83e4c63b2a3b1ef2aff19da",
+    "action": "updated"
+  },
+  "个人助手": {
+    "agent_id": "bd128b25fe9645c0992ddbfb84da0dd2",
+    "action": "created"
+  },
+  "助手": {
+    "agent_id": "50d8439227cc4a71aac26f88de9df33d",
+    "action": "updated"
+  },
+  "文书绑定": {
+    "agent_id": "a129fc97883346049c3298bde0c79067",
+    "action": "updated"
+  },
+  "法律法规": {
+    "agent_id": "236165916eba44ae8e7f01b3701cbfdf",
+    "action": "updated"
+  },
+  "海河天津站": {
+    "agent_id": "8f9c5471974e415bab1b620f20dc87e9",
+    "action": "updated"
+  },
+  "生成ppt": {
+    "agent_id": "3f6dffdac7534bdd87a49734b83d320e",
+    "action": "updated"
+  },
+  "六张网": {
+    "agent_id": "441da04762c147e9941db9b74eaccccf",
+    "action": "updated"
+  }
+}

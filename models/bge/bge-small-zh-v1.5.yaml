@@ -1,0 +1,15 @@
+name: bge-small-zh-v1.5
+label: BGE-small-zh v1.5 (本地)
+status: active
+
+# 本地私有 embedding 模型（TEI 容器托管，权重见同目录 BAAI--bge-small-zh-v1.5/，
+# 大文件走 Git LFS）。字段结构对齐 agentscope embedding/_embedding_model_card.py。
+# BAAI/bge-small-zh-v1.5：XLM-RoBERTa 架构，CLS pooling，输出 512 维，最大输入 512 token。
+input_types:
+  - text/plain
+
+output_types:
+  - application/x-embedding
+
+dimensions: 512
+context_size: 512

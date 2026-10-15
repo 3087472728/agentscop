@@ -1,0 +1,9 @@
+{
+  "_comment": "角色表种子示例（config/roles.json，AGENTS_ROLES_STORE=file 模式的事实源）。复制为 roles.json 后修改；密码支持明文（首次启动后自动哈希改写）或 bcrypt 哈希。字段：role ∈ admin|leader|member；team 可选（leader 的可见范围）；user_agents 可选（用户可用的智能体白名单，缺省=全部）。删除本文件即可回到干净的首次启动状态。",
+  "admin_edit": true,
+  "users": {
+    "admin": { "role": "admin", "password": "admin123" },
+    "zhang": { "role": "leader", "team": "delivery", "password": "ChangeMe" },
+    "lisi": { "role": "member", "password": "ChangeMe" }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_说明": "候选词动态占位符数据源。placeholders：{占位符: 只读SQL(须返回单行单值)}，SQL 在 sixnet schema 下执行（与固化脚本同库同账号）。db_file：只读连接配置，相对 config/ 目录。内置占位符 {date}=今天、{yesterday}=昨天，无需配置。新增动态指标：在此加一条 SQL，然后候选词里写 {新占位符} 即可。",
+  "db_file": "../workspaces/441da04762c147e9941db9b74eaccccf/ccull-report/tools/db.json",
+  "placeholders": {
+    "new_projects_yesterday": "SELECT count(*)::int FROM projects WHERE deleted = false AND created_at::date = current_date - 1",
+    "pending_changes": "SELECT (SELECT count(*) FROM project_change_requests WHERE status = 'pending') + (SELECT count(*) FROM dynamic_change_requests WHERE status = 'pending')",
+    "total_projects": "SELECT count(*)::int FROM projects WHERE deleted = false"
+  }
+}

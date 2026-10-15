@@ -1,0 +1,7 @@
+{
+	// Use the workspace TypeScript (6.0.x, frontend/node_modules). VS Code's
+	// bundled TS (<=5.9) rejects tsconfig's "ignoreDeprecations": "6.0"
+	// (needed because baseUrl is deprecated in TS 6.0) and shows a false
+	// "invalid value" error.
+	"typescript.tsdk": "frontend/node_modules/typescript/lib"
+}
