@@ -23,6 +23,19 @@ export function basicAuthHeader(userId?: string, password?: string): Record<stri
 }
 
 /**
+ * Map a blob URI stored in messages (`local://chat/<file>`, written by
+ * `POST /chat_uploads/`) to a fetchable HTTP URL against the current
+ * server base. Any other URL is returned unchanged, so call sites can
+ * use it directly for `<img src>` etc.
+ */
+export function resolveResourceUrl(url: string): string {
+	if (url.startsWith('local://chat/')) {
+		return `${getBaseUrl()}/chat_uploads/${url.slice('local://chat/'.length)}`;
+	}
+	return url;
+}
+
+/**
  * Structured error thrown for non-2xx HTTP responses.
  * `message` contains the human-readable detail extracted from the backend.
  */

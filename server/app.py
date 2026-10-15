@@ -94,6 +94,7 @@ from agentscope.workspace import WorkspaceBase  # noqa: E402
 from .auth import install_basic_auth  # noqa: E402
 from .doc_parser import DocParser  # noqa: E402
 from .embedding_models_patch import setup as setup_embedding_models  # noqa: E402
+from .chat_uploads_router import setup as setup_chat_uploads  # noqa: E402
 from .figures_router import figures_router  # noqa: E402
 from .github_skill_hub import GitHubSkillHub  # noqa: E402
 from .internal_skill_hub import InternalSkillHub  # noqa: E402
@@ -412,6 +413,10 @@ setup_stuck_run_guard(app, storage)
 
 # 15) 插图静态路由（/kb-images，无鉴权；KB 内嵌图片的引用前缀）。
 app.include_router(figures_router)
+
+# 16) 聊天图片上传/回显路由 + formatter 相对 URL 解析补丁
+#     （POST /chat_uploads/ 上传，GET /chat_uploads/{fn} 回显）。
+setup_chat_uploads(app)
 
 # ── Web UI 由本进程托管（单端口：API + 前端同源）─────────────────
 # 两种互斥模式（导入时确定）：

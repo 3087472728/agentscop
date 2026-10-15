@@ -27,6 +27,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { renderToolCall } from './tool-renderers';
 import { countDiffStats, DiffStats, getResultDiff } from './tool-renderers/_shared';
 import type { TFunction, ToolCallWithResult } from './tool-renderers/types';
+import { resolveResourceUrl } from '@/api/client';
 import { Markdown } from '@/components/markdown';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
@@ -611,7 +612,7 @@ export function ASBlock({ block, ...props }: ASBlockProps) {
 			if (dataType === 'audio') return null;
 			const data =
 				block.source.type === 'url'
-					? block.source.url
+					? resolveResourceUrl(block.source.url)
 					: `data:${block.source.media_type};base64,${block.source.data}`;
 			switch (dataType) {
 				case 'image':

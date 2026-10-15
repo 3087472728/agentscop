@@ -21,6 +21,7 @@ import React, {
 
 import { Button } from '../ui/button';
 import { Kbd } from '../ui/kbd';
+import { resolveResourceUrl } from '@/api/client';
 import {
 	Attachment,
 	AttachmentAction,
@@ -40,6 +41,8 @@ import { cn } from '@/lib/utils';
  * Represents a file that has been selected and processed (or is being processed).
  */
 interface ProcessedFile {
+	/** Unique id — pasted screenshots can share a name, so match by id. */
+	id: string;
 	/** Original file name for display */
 	name: string;
 	/** Processing status */
@@ -287,10 +290,42 @@ export const TextInput = forwardRef<TextInputRef, TextInputProps>(
 			const selected = Array.from(e.target.files);
 			// Reset input value so the same file can be re-selected
 			e.target.value = '';
+			processFiles(selected);
+		};
 
+		/** Whether the model can take images at all (undefined = unrestricted). */
+		const imagesAllowed =
+			allowedInputTypes === undefined ||
+			allowedInputTypes.some(
+				(t) => t === 'image/*' || t.startsWith('image/'),
+			);
+
+		/**
+		 * Paste handler: route image files from the clipboard through the
+		 * same attach flow as the file picker. Text pastes are untouched
+		 * (default browser behaviour), and images are ignored when the
+		 * model does not accept them.
+		 */
+		const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+			if (attachDisabled || !imagesAllowed) return;
+			const images = Array.from(e.clipboardData.files).filter((f) =>
+				f.type.startsWith('image/'),
+			);
+			if (images.length === 0) return;
+			e.preventDefault();
+			processFiles(images);
+		};
+
+		/**
+		 * Attach one or more files: insert a processing placeholder per
+		 * file, then run {@link fileProcessor}. Matching between the
+		 * placeholder and its result is by unique id, not name.
+		 */
+		const processFiles = (selected: File[]) => {
 			selected.forEach((file) => {
 				// Insert a placeholder in processing state
 				const placeholder: ProcessedFile = {
+					id: crypto.randomUUID(),
 					name: file.name,
 					status: 'processing',
 					block: null,
@@ -304,7 +339,7 @@ export const TextInput = forwardRef<TextInputRef, TextInputProps>(
 							(prev) =>
 								prev
 									.map((f) =>
-										f.name === file.name && f.status === 'processing'
+										f.id === placeholder.id && f.status === 'processing'
 											? block
 												? { ...f, status: 'done', block }
 												: null
@@ -317,9 +352,7 @@ export const TextInput = forwardRef<TextInputRef, TextInputProps>(
 						// Caller is responsible for error notification (e.g. toast).
 						// Just silently remove the entry here.
 						setFiles((prev) =>
-							prev.filter(
-								(f) => !(f.name === file.name && f.status === 'processing'),
-							),
+							prev.filter((f) => f.id !== placeholder.id),
 						);
 					});
 			});
@@ -345,7 +378,7 @@ export const TextInput = forwardRef<TextInputRef, TextInputProps>(
 									const block = file.block;
 									data =
 										block.source.type === 'url'
-											? block.source.url
+											? resolveResourceUrl(block.source.url)
 											: `data:${block.source.media_type};base64,${block.source.data}`;
 								}
 
@@ -433,6 +466,7 @@ export const TextInput = forwardRef<TextInputRef, TextInputProps>(
 								value={value}
 								onChange={(e) => setValue(e.target.value)}
 								onKeyDown={handleKeyDown}
+								onPaste={handlePaste}
 								onFocus={() => setIsFocused(true)}
 								onBlur={() => setIsFocused(false)}
 								placeholder={defaultPlaceholder}

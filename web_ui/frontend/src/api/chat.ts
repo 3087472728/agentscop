@@ -1,5 +1,13 @@
-import { client } from './client';
+import { basicAuthHeader, client, getBaseUrl } from './client';
 import type { ChatRequest } from './types';
+
+/** Upload response of `POST /chat_uploads/`. */
+export interface ChatImageUpload {
+	/** Relative URL for inline reference, e.g. `/chat_uploads/<uuid>.png`. */
+	url: string;
+	media_type: string;
+	name: string;
+}
 
 /**
  * Chat API — fire-and-forget trigger for chat runs.
@@ -22,4 +30,29 @@ export const chatApi = {
 	 */
 	trigger: (body: ChatRequest) =>
 		client.post<{ status: string; session_id: string }>('/chat/', body),
+
+	/**
+	 * Upload one chat image to the backend (multipart). The message
+	 * then references it by URL instead of inlining megabytes of
+	 * base64 into the payload / SSE stream.
+	 *
+	 * @param file - An image file (`image/*` MIME types only).
+	 * @returns The stored blob's relative URL and metadata.
+	 */
+	uploadImage: async (file: File): Promise<ChatImageUpload> => {
+		const form = new FormData();
+		form.append('file', file);
+		const res = await fetch(new URL('/chat_uploads/', getBaseUrl()), {
+			method: 'POST',
+			headers: basicAuthHeader(),
+			body: form,
+		});
+		if (!res.ok) {
+			const text = await res.text().catch(() => '');
+			throw new Error(
+				`Image upload failed (${res.status}): ${text || res.statusText}`,
+			);
+		}
+		return res.json() as Promise<ChatImageUpload>;
+	},
 };

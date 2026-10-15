@@ -7,6 +7,9 @@ status: active
 # 按官方规格确认后可调整。
 input_types:
   - text/plain
+  - image/jpeg
+  - image/png
+  - image/webp
 
 output_types:
   - text/plain

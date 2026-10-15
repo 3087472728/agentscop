@@ -18,7 +18,7 @@ import type {
 	TTSModelConfig,
 	UpdateSessionRequest,
 } from '@/api';
-import { sessionApi } from '@/api';
+import { chatApi, sessionApi } from '@/api';
 import MCPSvg from '@/assets/images/mcp.svg?react';
 import { ChatContent } from '@/components/chat/ChatContent.tsx';
 import { SubagentHitlCard } from '@/components/chat/SubagentHitlCard';
@@ -887,6 +887,30 @@ export function ChatViewport({ agentId, sessionId, onSessionsChanged }: ChatView
 											t.startsWith('application/vnd.openxmlformats'),
 									)}
 									fileProcessor={async (file) => {
+										// 图片走服务端上传：消息里只存相对 URL，
+										// 避免 base64 撑大 payload 与 SSE；失败时
+										// 回退到内联 base64，保证功能可用。
+										if (file.type.startsWith('image/')) {
+											try {
+												const up = await chatApi.uploadImage(file);
+												return {
+													id: crypto.randomUUID(),
+													type: 'data' as const,
+													source: {
+														type: 'url' as const,
+														url: up.url,
+														media_type: up.media_type,
+													},
+													name: up.name,
+													created_at: new Date().toISOString(),
+												};
+											} catch (e) {
+												console.warn(
+													'Chat image upload failed, falling back to inline base64:',
+													e,
+												);
+											}
+										}
 										const filePath = (file as File & { path?: string }).path;
 										if (filePath) {
 											return {
