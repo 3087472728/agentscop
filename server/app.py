@@ -93,6 +93,7 @@ from agentscope.workspace import WorkspaceBase  # noqa: E402
 # ── 业务扩展模块（相对导入，作为 server 包的一部分）────────────────
 from .auth import install_basic_auth  # noqa: E402
 from .doc_parser import DocParser  # noqa: E402
+from .download_token_ttl_patch import setup as setup_download_token_ttl  # noqa: E402
 from .embedding_models_patch import setup as setup_embedding_models  # noqa: E402
 from .chat_uploads_router import setup as setup_chat_uploads  # noqa: E402
 from .figures_router import figures_router  # noqa: E402
@@ -115,6 +116,7 @@ from .roles_store import bind_storage as roles_store_bind_storage  # noqa: E402
 from . import roles_store  # noqa: E402
 from .session_permission_patch import setup as setup_session_permission  # noqa: E402
 from .session_replay_patch import setup as setup_session_replay  # noqa: E402
+from .short_dl_api import setup as setup_short_dl  # noqa: E402
 from .skill_visibility import setup as setup_skill_visibility  # noqa: E402
 from .stuck_run_guard import setup as setup_stuck_run_guard  # noqa: E402
 from .tool_offload_patch import setup as setup_tool_offload  # noqa: E402
@@ -417,6 +419,15 @@ app.include_router(figures_router)
 # 16) 聊天图片上传/回显路由 + formatter 相对 URL 解析补丁
 #     （POST /chat_uploads/ 上传，GET /chat_uploads/{fn} 回显）。
 setup_chat_uploads(app)
+
+# 17) 下载令牌有效期 60s → 3600s（聊天里的下载链接可稍后点击）。
+#     迁移自服务器 agentscop 未提交修改（2026-11-12）。
+setup_download_token_ttl()
+
+# 18) 下载短链（POST /workspace/files/short-link 签发，
+#     GET /dl/{code} 302 跳转）：聊天里只放短链，杜绝长 URL
+#     被截断导致 "Invalid download token"。同批迁移。
+setup_short_dl(app, storage)
 
 # ── Web UI 由本进程托管（单端口：API + 前端同源）─────────────────
 # 两种互斥模式（导入时确定）：
